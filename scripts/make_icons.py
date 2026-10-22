@@ -1,6 +1,6 @@
-"""Builds adaptive launcher icon PNGs (white background layer + transparent logo layer) from branding/icon.jpg.b64."""
+"""Builds adaptive launcher icon PNGs (rounded-square white tile background + transparent logo layer) from branding/icon.jpg.b64."""
 import base64, io, os, sys
-from PIL import Image
+from PIL import Image, ImageDraw
 out = sys.argv[1]
 src = Image.open(io.BytesIO(base64.b64decode(open("branding/icon.jpg.b64").read()))).convert("RGB")
 # crop to the logo (everything that is not near-white)
@@ -20,5 +20,9 @@ for d, s in sizes.items():
     fg = Image.new("RGBA", (s, s), (0, 0, 0, 0))
     fg.alpha_composite(px.resize((w, h), Image.LANCZOS), ((s - w) // 2, (s - h) // 2))
     fg.save(os.path.join(p, "adaptiveproduct_youtube_foreground_color_108.png"))
-    Image.new("RGBA", (s, s), (255, 255, 255, 255)).save(os.path.join(p, "adaptiveproduct_youtube_background_color_108.png"))
+    bg = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+    dr = ImageDraw.Draw(bg)
+    i = int(s * 0.0833)
+    dr.rounded_rectangle((i, i, s - i, s - i), radius=int(s * 0.25), fill=(255, 255, 255, 255))
+    bg.save(os.path.join(p, "adaptiveproduct_youtube_background_color_108.png"))
 print("icons written to", out)
