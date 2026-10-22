@@ -8,6 +8,12 @@ on:
       app_version:
         description: "Stock app version to patch"
         default: "21.13.164"
+      package_name:
+        description: "App package name (side-by-side installs need a distinct one)"
+        default: "anddea.youtube"
+      app_label:
+        description: "App launcher label"
+        default: "YouTube"
 permissions:
   contents: read
 jobs:
@@ -41,6 +47,8 @@ jobs:
           KS_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
           APP_VERSION: ${{ inputs.app_version }}
           PATCHES_TAG: ${{ inputs.patches_tag }}
+          PACKAGE_NAME: ${{ inputs.package_name }}
+          APP_LABEL: ${{ inputs.app_label }}
           GITHUB_TOKEN: ${{ github.token }}
         run: bash scripts/build.sh
       - name: Verify output
