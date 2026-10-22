@@ -59,14 +59,15 @@ public class ForceOriginalAudioPatch {
      */
     private static boolean preferGermanAudio() {
         if (preferGermanAudio == null) {
-            boolean enabled = false;
+            boolean detected = false;
             try {
-                enabled = MOM_BUILD_PACKAGE_NAME.equals(Utils.getContext().getPackageName());
+                detected = MOM_BUILD_PACKAGE_NAME.equals(Utils.getContext().getPackageName());
             } catch (Exception ex) {
                 Logger.printException(() -> "preferGermanAudio failure", ex);
             }
-            preferGermanAudio = enabled;
+            final boolean enabled = detected;
             Logger.printDebug(() -> "Always-German audio: " + enabled);
+            preferGermanAudio = enabled;
         }
         return preferGermanAudio;
     }
