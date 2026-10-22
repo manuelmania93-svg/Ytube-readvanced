@@ -20,6 +20,7 @@ jobs:
         run: |
           ls -la
           gh release create v21.13.164 \
+            --repo ${{ github.repository }} \
             --title "Ytube readvanced - YouTube 21.13.164" \
             --notes "Stock YouTube 21.13.164 patched with anddea revanced-patches v4.4.0-dev.3 (82 patches: ad block, SponsorBlock, background play, PiP, Return YouTube Dislike, swipe controls, themes, external download hook). Package anddea.youtube - installs next to the official app. Install microG-GmsCore.apk FIRST (needed for Google sign-in), then patched-21.13.164.apk." \
             patched-21.13.164.apk microG-GmsCore.apk patches-version.txt
