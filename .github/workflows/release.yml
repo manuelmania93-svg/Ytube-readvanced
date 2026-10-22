@@ -1,0 +1,25 @@
+name: Release APKs
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: apks
+          run-id: 39849289497
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -la
+          gh release create v21.13.164 \
+            --title "Ytube readvanced - YouTube 21.13.164" \
+            --notes "Stock YouTube 21.13.164 patched with anddea revanced-patches v4.4.0-dev.3 (82 patches: ad block, SponsorBlock, background play, PiP, Return YouTube Dislike, swipe controls, themes, external download hook). Package anddea.youtube - installs next to the official app. Install microG-GmsCore.apk FIRST (needed for Google sign-in), then patched-21.13.164.apk." \
+            patched-21.13.164.apk microG-GmsCore.apk patches-version.txt
