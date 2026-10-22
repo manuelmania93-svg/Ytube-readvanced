@@ -20,6 +20,20 @@ for OVERRIDE in patches-custom/*.java; do
   fi
   cp "$OVERRIDE" "$DEST"
 done
+# Kotlin patch overrides: files under patches-custom/kotlin/ mirror paths under
+# patches/src/main/kotlin/ (e.g. app/morphe/patches/shared/gms/GmsCoreSupportPatch.kt).
+if [ -d patches-custom/kotlin ]; then
+  (cd patches-custom/kotlin && find . -type f) | while read -r KFILE; do
+    DEST="$SRC/patches/src/main/kotlin/${KFILE#./}"
+    if [ -f "$DEST" ]; then
+      echo "Applied Kotlin override: ${KFILE#./}"
+    else
+      echo "Added new Kotlin file: ${KFILE#./}"
+    fi
+    mkdir -p "$(dirname "$DEST")"
+    cp "patches-custom/kotlin/${KFILE#./}" "$DEST"
+  done
+fi
 # Resource overrides: files under patches-custom/resources/ mirror paths under
 # patches/src/main/resources/ (e.g. youtube/settings/xml/revanced_prefs.xml).
 if [ -d patches-custom/resources ]; then
