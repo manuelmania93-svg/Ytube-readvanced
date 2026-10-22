@@ -3,6 +3,8 @@
 # Env: PATCHES_TAG (default: latest release incl. pre-releases), APP_VERSION, KS_FILE, KS_PASS, KS_ALIAS
 set -euo pipefail
 APP_VERSION="${APP_VERSION:-21.13.164}"
+PACKAGE_NAME="${PACKAGE_NAME:-anddea.youtube}"
+APP_LABEL="${APP_LABEL:-YouTube}"
 PATCHES_TAG="${PATCHES_TAG:-latest}"
 KS_ALIAS="${KS_ALIAS:-pmb}"
 OUT=out; WORK=work
@@ -43,7 +45,8 @@ curl -fsSL -o "$OUT/microG-GmsCore.apk" "$GMS_URL"
 pip install --quiet pillow >/dev/null 2>&1 || true
 python3 scripts/make_icons.py "$WORK/icons"
 java -jar "$WORK/cli.jar" patch -p "$WORK/patches.mpp" \
-  -e "Custom branding for YouTube" -O customName=YouTube -O appIcon=custom -O "customIcon=$PWD/$WORK/icons" \
+  -e "Custom branding for YouTube" -O "customName=$APP_LABEL" -O appIcon=custom -O "customIcon=$PWD/$WORK/icons" \
+  -e "GmsCore support" -O "packageNameYouTube=$PACKAGE_NAME" \
   --keystore="$KS_FILE" --keystore-password="$KS_PASS" \
   --keystore-entry-alias="$KS_ALIAS" --keystore-entry-password="$KS_PASS" \
   -o "$OUT/patched-$APP_VERSION.apk" "$STOCK" 2>&1 | tee "$WORK/patch.log" | tail -60
