@@ -13,9 +13,12 @@ git clone --depth 1 --branch "$TAG" https://github.com/anddea/revanced-patches "
 for OVERRIDE in patches-custom/*.java; do
   NAME=$(basename "$OVERRIDE")
   DEST="$SRC/extensions/shared/src/main/java/app/morphe/extension/shared/patches/$NAME"
-  test -f "$DEST"
+  if [ -f "$DEST" ]; then
+    echo "Applied override: $NAME"
+  else
+    echo "Added new extension file: $NAME"
+  fi
   cp "$OVERRIDE" "$DEST"
-  echo "Applied override: $NAME"
 done
 cd "$SRC"
 chmod +x gradlew
