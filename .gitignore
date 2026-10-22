@@ -1,0 +1,7 @@
+work/
+out/
+*.keystore
+*.bks
+*.jks
+*.p12
+*.apk
