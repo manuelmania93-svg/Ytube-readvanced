@@ -165,10 +165,32 @@ public final class CustomBrandingPatch {
      * dependency graph using the exact activity type.</p>
      */
     public static class SplashlessLauncherActivity extends Activity {
+        private boolean microGGateShown;
+
         @Override
         protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
 
+            // Ytube-readvanced customization: entry window gates on microG before
+            // the main activity (and its GmsCore dependency) is ever touched.
+            if (!MicroGGate.isGmsCoreInstalled(this)) {
+                microGGateShown = true;
+                MicroGGate.showGate(this);
+                return;
+            }
+            forwardToMainActivity();
+        }
+
+        @Override
+        protected void onResume() {
+            super.onResume();
+            // Returning after installing microG: continue straight into the app.
+            if (microGGateShown && MicroGGate.isGmsCoreInstalled(this)) {
+                forwardToMainActivity();
+            }
+        }
+
+        private void forwardToMainActivity() {
             String mainActivityName = CustomBrandingPatch.getString(
                     this, MAIN_ACTIVITY_RESOURCE, "");
             if (mainActivityName.isEmpty()) {
@@ -1105,4 +1127,4 @@ public final class CustomBrandingPatch {
             return false;
         }
     }
-              }
+            }
