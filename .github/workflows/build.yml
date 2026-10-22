@@ -4,7 +4,7 @@ on:
     inputs:
       patches_tag:
         description: "Patch bundle release tag (latest = newest release)"
-        default: "latest"
+        default: "v4.3.0"
       app_version:
         description: "Stock app version to patch"
         default: "21.13.164"
@@ -13,9 +13,13 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -24,6 +28,13 @@ jobs:
         env:
           KS_B64: ${{ secrets.KEYSTORE_B64 }}
         run: echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/ks.bks"
+      - name: Build custom patch bundle (when patches-custom override exists)
+        if: hashFiles('patches-custom/GmsCoreSupport.java') != ''
+        env:
+          PATCHES_TAG: ${{ inputs.patches_tag }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_ACTOR: ${{ github.actor }}
+        run: bash scripts/build-patches.sh
       - name: Build
         env:
           KS_FILE: ${{ runner.temp }}/ks.bks
