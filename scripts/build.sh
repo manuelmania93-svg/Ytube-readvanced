@@ -18,9 +18,9 @@ echo "Patches: $PATCHES_TAG"
 PURL=$(gh_api "https://api.github.com/repos/anddea/revanced-patches/releases/tags/$PATCHES_TAG" | jq -r '.assets[]|select(.name|endswith(".mpp"))|.browser_download_url')
 curl -fsSL -o "$WORK/patches.mpp" "$PURL"
 
-# 2. ReVanced CLI
-CLI_TAG=v6.0.0
-curl -fsSL -o "$WORK/cli.jar" "https://github.com/ReVanced/revanced-cli/releases/download/$CLI_TAG/revanced-cli-6.0.0-all.jar"
+# 2. Patcher CLI (the anddea bundle is built for the Morphe patcher engine, needs Java 21)
+CLI_TAG=v1.19.0
+[ -s "$WORK/cli.jar" ] || curl -fsSL -o "$WORK/cli.jar" "https://github.com/MorpheApp/morphe-desktop/releases/download/$CLI_TAG/morphe-desktop-1.19.0-all.jar"
 
 # 3. Stock APK (community archive.org mirror of the unmodified Google APK), verified against Google's signing cert below
 STOCK="$WORK/youtube-$APP_VERSION.apk"
@@ -36,9 +36,13 @@ GMS_URL=$(gh_api https://api.github.com/repos/ReVanced/GmsCore/releases/latest |
 curl -fsSL -o "$OUT/microG-GmsCore.apk" "$GMS_URL"
 
 # 5. Patch + sign (default-enabled patches of the bundle: ads, SponsorBlock, background playback, GmsCore support, ...)
-java -jar "$WORK/cli.jar" patch -b -p "$WORK/patches.mpp" \
+java -jar "$WORK/cli.jar" patch -p "$WORK/patches.mpp" \
   --keystore="$KS_FILE" --keystore-password="$KS_PASS" \
   --keystore-entry-alias="$KS_ALIAS" --keystore-entry-password="$KS_PASS" \
-  -o "$OUT/patched-$APP_VERSION.apk" "$STOCK" 2>&1 | tee "$WORK/patch.log" | tail -40
+  -o "$OUT/patched-$APP_VERSION.apk" "$STOCK" 2>&1 | tee "$WORK/patch.log" | tail -60
+if grep -qE 'SEVERE|NoClassDefFound|Failed to load patches' "$WORK/patch.log"; then
+  echo "::error::Patching reported errors"; exit 1
+fi
+test -s "$OUT/patched-$APP_VERSION.apk"
 echo "$PATCHES_TAG" > "$OUT/patches-version.txt"
 ls -la "$OUT"
