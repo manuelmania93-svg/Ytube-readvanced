@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "21"
       - name: Restore keystore
         env:
           KS_B64: ${{ secrets.KEYSTORE_B64 }}
@@ -39,6 +39,9 @@ jobs:
           {
             echo "## Build result"
             echo "Patch bundle: $(cat out/patches-version.txt)"
+            echo "Applied patches: $(grep -c '^INFO: Applied' work/patch.log)"
+            grep -E '^INFO: Applied' work/patch.log | sed 's/INFO: Applied: //' | tr '\n' ',' | fold -w 200
+            echo
             echo '```'
             "$BT/aapt2" dump badging "$APK" | grep -E "^package:|application-label:" | head -3
             "$BT/apksigner" verify --verbose --print-certs "$APK" | grep -E "Verifies|Verified using|SHA-256|DN:" | head -8
