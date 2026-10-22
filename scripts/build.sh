@@ -39,7 +39,7 @@ curl -fsSL -o "$OUT/microG-GmsCore.apk" "$GMS_URL"
 pip install --quiet pillow >/dev/null 2>&1 || true
 python3 scripts/make_icons.py "$WORK/icons"
 java -jar "$WORK/cli.jar" patch -p "$WORK/patches.mpp" \
-  -e "Custom branding for YouTube" -O customName=Ytube -O appIcon=custom -O "customIcon=$PWD/$WORK/icons" \
+  -e "Custom branding for YouTube" -O customName=YouTube -O appIcon=custom -O "customIcon=$PWD/$WORK/icons" \
   --keystore="$KS_FILE" --keystore-password="$KS_PASS" \
   --keystore-entry-alias="$KS_ALIAS" --keystore-entry-password="$KS_PASS" \
   -o "$OUT/patched-$APP_VERSION.apk" "$STOCK" 2>&1 | tee "$WORK/patch.log" | tail -60
