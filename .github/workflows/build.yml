@@ -1,0 +1,57 @@
+name: Build patched app
+on:
+  workflow_dispatch:
+    inputs:
+      patches_tag:
+        description: "Patch bundle release tag (latest = newest release)"
+        default: "latest"
+      app_version:
+        description: "Stock app version to patch"
+        default: "21.13.164"
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Restore keystore
+        env:
+          KS_B64: ${{ secrets.KEYSTORE_B64 }}
+        run: echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/ks.bks"
+      - name: Build
+        env:
+          KS_FILE: ${{ runner.temp }}/ks.bks
+          KS_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
+          APP_VERSION: ${{ inputs.app_version }}
+          PATCHES_TAG: ${{ inputs.patches_tag }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: bash scripts/build.sh
+      - name: Verify output
+        run: |
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          APK=$(ls out/patched-*.apk)
+          {
+            echo "## Build result"
+            echo "Patch bundle: $(cat out/patches-version.txt)"
+            echo '```'
+            "$BT/aapt2" dump badging "$APK" | grep -E "^package:|application-label:" | head -3
+            "$BT/apksigner" verify --verbose --print-certs "$APK" | grep -E "Verifies|Verified using|SHA-256|DN:" | head -8
+            ls -la out/*.apk
+            echo '```'
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+          "$BT/apksigner" verify "$APK"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apks
+          path: |
+            out/patched-*.apk
+            out/microG-GmsCore.apk
+            out/patches-version.txt
+          retention-days: 1
+          if-no-files-found: error
