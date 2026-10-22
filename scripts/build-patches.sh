@@ -20,6 +20,20 @@ for OVERRIDE in patches-custom/*.java; do
   fi
   cp "$OVERRIDE" "$DEST"
 done
+# Resource overrides: files under patches-custom/resources/ mirror paths under
+# patches/src/main/resources/ (e.g. youtube/settings/xml/revanced_prefs.xml).
+if [ -d patches-custom/resources ]; then
+  (cd patches-custom/resources && find . -type f) | while read -r RES; do
+    DEST="$SRC/patches/src/main/resources/${RES#./}"
+    if [ -f "$DEST" ]; then
+      echo "Applied resource override: ${RES#./}"
+    else
+      echo "Added new resource file: ${RES#./}"
+    fi
+    mkdir -p "$(dirname "$DEST")"
+    cp "patches-custom/resources/${RES#./}" "$DEST"
+  done
+fi
 cd "$SRC"
 chmod +x gradlew
 export JAVA_HOME="${JAVA_HOME_17_X64:?setup-java with java-version 17 is required}"
