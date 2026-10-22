@@ -1,6 +1,23 @@
 name: Release APKs
 on:
   workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Build workflow run ID whose 'apks' artifact to release"
+        required: true
+      tag:
+        description: "Release tag to create"
+        required: true
+      title:
+        description: "Release title"
+        required: true
+      notes:
+        description: "Release notes"
+        required: true
+      prerelease:
+        description: "Mark as pre-release"
+        type: boolean
+        default: false
 permissions:
   contents: write
   actions: read
@@ -12,15 +29,16 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: apks
-          run-id: 39849289497
+          run-id: ${{ inputs.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           ls -la
-          gh release create v21.13.164 \
+          gh release create "${{ inputs.tag }}" \
             --repo ${{ github.repository }} \
-            --title "Ytube readvanced - YouTube 21.13.164" \
-            --notes "Stock YouTube 21.13.164 patched with anddea revanced-patches v4.4.0-dev.3 (82 patches: ad block, SponsorBlock, background play, PiP, Return YouTube Dislike, swipe controls, themes, external download hook). Package anddea.youtube - installs next to the official app. Install microG-GmsCore.apk FIRST (needed for Google sign-in), then patched-21.13.164.apk." \
-            patched-21.13.164.apk microG-GmsCore.apk patches-version.txt
+            --title "${{ inputs.title }}" \
+            --notes "${{ inputs.notes }}" \
+            ${{ inputs.prerelease && '--prerelease' || '' }} \
+            patched-*.apk microG-GmsCore.apk patches-version.txt
