@@ -10,13 +10,17 @@ mkdir -p "$OUT" "$WORK"
 
 gh_api() { curl -fsSL ${GITHUB_TOKEN:+-H "Authorization: Bearer $GITHUB_TOKEN"} "$@"; }
 
-# 1. Patch bundle
-if [ "$PATCHES_TAG" = latest ]; then
-  PATCHES_TAG=$(gh_api "https://api.github.com/repos/anddea/revanced-patches/releases?per_page=1" | jq -r '.[0].tag_name')
+# 1. Patch bundle (a prebuilt bundle from scripts/build-patches.sh wins if present)
+if [ -s "$WORK/patches.mpp" ]; then
+  echo "Patches: using prebuilt custom bundle at $WORK/patches.mpp"
+else
+  if [ "$PATCHES_TAG" = latest ]; then
+    PATCHES_TAG=$(gh_api "https://api.github.com/repos/anddea/revanced-patches/releases?per_page=1" | jq -r '.[0].tag_name')
+  fi
+  echo "Patches: $PATCHES_TAG"
+  PURL=$(gh_api "https://api.github.com/repos/anddea/revanced-patches/releases/tags/$PATCHES_TAG" | jq -r '.assets[]|select(.name|endswith(".mpp"))|.browser_download_url')
+  curl -fsSL -o "$WORK/patches.mpp" "$PURL"
 fi
-echo "Patches: $PATCHES_TAG"
-PURL=$(gh_api "https://api.github.com/repos/anddea/revanced-patches/releases/tags/$PATCHES_TAG" | jq -r '.assets[]|select(.name|endswith(".mpp"))|.browser_download_url')
-curl -fsSL -o "$WORK/patches.mpp" "$PURL"
 
 # 2. Patcher CLI (the anddea bundle is built for the Morphe patcher engine, needs Java 21)
 CLI_TAG=v1.19.0
@@ -47,5 +51,5 @@ if grep -qE 'SEVERE|NoClassDefFound|Failed to load patches' "$WORK/patch.log"; t
   echo "::error::Patching reported errors"; exit 1
 fi
 test -s "$OUT/patched-$APP_VERSION.apk"
-echo "$PATCHES_TAG" > "$OUT/patches-version.txt"
+{ cat "$WORK/bundle-version.txt" 2>/dev/null || echo "$PATCHES_TAG"; } > "$OUT/patches-version.txt"
 ls -la "$OUT"
